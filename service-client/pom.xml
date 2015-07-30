@@ -1,0 +1,192 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.la</groupId>
+    <artifactId>foows.client</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <packaging>war</packaging>
+
+    <name>Just a dumb Webservice</name>
+    <url>http://maven.apache.org</url>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-web-api</artifactId>
+            <version>7.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.metro</groupId>
+            <artifactId>webservices-rt</artifactId>
+            <version>2.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>lanexus</id>
+            <name>Internal Releases</name>
+            <url>http://localhost:8081/nexus/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>lanexus</id>
+            <name>Internal Releases</name>
+            <url>http://localhost:8081/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <build>
+        <finalName>foows</finalName>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.3</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>deploy-wsdl</id>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <!-- Generate the WSDLs/XSDs -->
+                        <groupId>net.trajano.mojo</groupId>
+                        <artifactId>jaxws-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>generate-FooWS-wsdl</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>wsgen</goal>
+                                </goals>
+                                <configuration>
+                                    <sei>org.la.foows.ws.FooWS</sei>
+                                    <!-- Since we use a jar we can have multiple files -->
+                                    <!-- <inlineSchemas>true</inlineSchemas> -->
+                                    <resourceDestDir>${project.build.directory}/generated-sources/wsdl/FooWS</resourceDestDir>
+                                </configuration>
+                            </execution>
+                        </executions>
+
+                        <configuration>
+                            <xnocompile>true</xnocompile>
+                            <genWsdl>true</genWsdl>
+                            <extension>true</extension>
+                            <keep>false</keep>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Pack the WSDLs/XSDs in a JAR -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>2.6</version>
+                        <executions>
+                            <execution>
+                                <id>attach-FooWS-wsdl-jar</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                                <configuration>
+                                    <finalName>FooWS</finalName>
+                                    <outputDirectory>${project.build.directory}/generated-sources/wsdl</outputDirectory>
+                                    <classesDirectory>${project.build.directory}/generated-sources/wsdl/FooWS</classesDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+
+                        <configuration>
+                            <includes>
+                                <include>**/*.wsdl</include>
+                                <include>**/*.xsd</include>
+                            </includes>
+                            <useDefaultManifestFile>true</useDefaultManifestFile>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Deploy the JAR containg the WSDLs/XSDs -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <version>2.8.2</version>
+                        <executions>
+                            <execution>
+                                <id>deploy-FooWS-wsdl-jar</id>
+                                <phase>deploy</phase>
+                                <goals>
+                                    <goal>deploy-file</goal>
+                                </goals>
+                                <configuration>
+                                    <groupId>${project.groupId}.FooWS.wsdl</groupId>
+                                    <file>${project.build.directory}/generated-sources/wsdl/FooWS.jar</file>
+                                </configuration>
+                            </execution>
+                        </executions>
+                       
+                        <configuration>
+                            <packaging>jar</packaging>
+                            <generatePom>true</generatePom>
+                            <artifactId>${project.artifactId}</artifactId>
+                            <version>${project.version}</version>
+                            <!-- FIXME: use the default ones -->
+                            <repositoryId>lanexus</repositoryId>
+                            <url>http://localhost:8081/nexus/content/repositories/snapshots/</url>
+                    </configuration>
+                    </plugin>
+
+                </plugins>
+
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>net.trajano.mojo</groupId>
+                            <artifactId>jaxws-maven-plugin</artifactId>
+                            <version>2.3.8</version>
+                            <dependencies>
+                                <dependency>
+                                    <groupId>org.glassfish.metro</groupId>
+                                    <artifactId>webservices-tools</artifactId>
+                                    <version>2.3</version>
+                                </dependency>
+                                <!-- see https://java.net/jira/browse/WSIT-1672 -->
+                                <dependency>
+                                    <groupId>org.glassfish.metro</groupId>
+                                    <artifactId>webservices-rt</artifactId>
+                                    <version>2.3</version>
+                                </dependency>
+                            </dependencies>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
+
+</project>
