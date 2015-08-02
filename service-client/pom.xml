@@ -7,8 +7,14 @@
 
 	<packaging>war</packaging>
 
-	<name>Consume a dumb Webservice</name>
-	<url>http://maven.apache.org</url>
+	<name>Consume a dumb Webservice that is a Maven dependency</name>
+	<url>https://pt.linkedin.com/in/luisalves00</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+	</properties>
 
 	<repositories>
 		<repository>
@@ -104,8 +110,9 @@
 			</plugin>
 
 			<!-- Generate the stub from WSDLs/XSDs TODO -->
-			<!-- If your sources won't get picked up by Eclipse, check out this m2e connector: -->
-			<!-- http://stackoverflow.com/a/19225122/987940 --> 
+			<!-- If your sources won't get picked up by Eclipse, check out this m2e 
+				connector: -->
+			<!-- http://stackoverflow.com/a/19225122/987940 -->
 			<plugin>
 				<groupId>net.trajano.mojo</groupId>
 				<artifactId>jaxws-maven-plugin</artifactId>
@@ -139,8 +146,8 @@
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
 				</configuration>
 			</plugin>
 
