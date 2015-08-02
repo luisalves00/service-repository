@@ -1,192 +1,181 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>org.la</groupId>
-    <artifactId>foows.client</artifactId>
-    <version>1.0-SNAPSHOT</version>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.la</groupId>
+	<artifactId>foows.client</artifactId>
+	<version>1.0-SNAPSHOT</version>
 
-    <packaging>war</packaging>
+	<packaging>war</packaging>
 
-    <name>Just a dumb Webservice</name>
-    <url>http://maven.apache.org</url>
+	<name>Consume a dumb Webservice</name>
+	<url>http://maven.apache.org</url>
 
-    <dependencies>
+	<repositories>
+		<repository>
+			<id>lanexus</id>
+			<name>Internal Releases</name>
+			<url>http://localhost:8081/nexus/content/repositories/snapshots/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 
-        <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-web-api</artifactId>
-            <version>7.0</version>
-            <scope>provided</scope>
-        </dependency>
+	<dependencies>
 
-        <dependency>
-            <groupId>org.glassfish.metro</groupId>
-            <artifactId>webservices-rt</artifactId>
-            <version>2.3</version>
-        </dependency>
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>javaee-web-api</artifactId>
+			<version>7.0</version>
+			<scope>provided</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.11</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>org.glassfish.metro</groupId>
+			<artifactId>webservices-rt</artifactId>
+			<version>2.3</version>
+		</dependency>
 
-    </dependencies>
+		<dependency>
+			<groupId>org.la</groupId>
+			<artifactId>foows.FooWS.wsdl</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
 
-    <distributionManagement>
-        <repository>
-            <id>lanexus</id>
-            <name>Internal Releases</name>
-            <url>http://localhost:8081/nexus/content/repositories/releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>lanexus</id>
-            <name>Internal Releases</name>
-            <url>http://localhost:8081/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
 
-    <build>
-        <finalName>foows</finalName>
+	</dependencies>
 
-        <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                </configuration>
-            </plugin>
+	<distributionManagement>
+		<repository>
+			<id>lanexus</id>
+			<name>Internal Releases</name>
+			<url>http://localhost:8081/nexus/content/repositories/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>lanexus</id>
+			<name>Internal Releases</name>
+			<url>http://localhost:8081/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
-            <plugin>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>2.3</version>
-                <configuration>
-                    <failOnMissingWebXml>false</failOnMissingWebXml>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+	<build>
+		<finalName>foows</finalName>
 
-    <profiles>
-        <profile>
-            <id>deploy-wsdl</id>
+		<plugins>
 
-            <build>
-                <plugins>
-                    <plugin>
-                        <!-- Generate the WSDLs/XSDs -->
-                        <groupId>net.trajano.mojo</groupId>
-                        <artifactId>jaxws-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>generate-FooWS-wsdl</id>
-                                <phase>process-classes</phase>
-                                <goals>
-                                    <goal>wsgen</goal>
-                                </goals>
-                                <configuration>
-                                    <sei>org.la.foows.ws.FooWS</sei>
-                                    <!-- Since we use a jar we can have multiple files -->
-                                    <!-- <inlineSchemas>true</inlineSchemas> -->
-                                    <resourceDestDir>${project.build.directory}/generated-sources/wsdl/FooWS</resourceDestDir>
-                                </configuration>
-                            </execution>
-                        </executions>
+			<!-- Unpack the wsdls -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.10</version>
+				<executions>
+					<execution>
+						<id>unpack</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>unpack</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>org.la</groupId>
+									<artifactId>foows.FooWS.wsdl</artifactId>
+									<version>1.0-SNAPSHOT</version>
+									<type>jar</type>
+									<overWrite>false</overWrite>
+									<outputDirectory>${project.build.directory}/wsdl</outputDirectory>
+									<destFileName>optional-new-name.jar</destFileName>
+									<includes>**/*.wsdl,**/*.xsd</includes>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<includes>**/*.wsdl,**/*.xsd</includes>
+					<outputDirectory>${project.build.directory}/wsdl</outputDirectory>
+				</configuration>
+			</plugin>
 
-                        <configuration>
-                            <xnocompile>true</xnocompile>
-                            <genWsdl>true</genWsdl>
-                            <extension>true</extension>
-                            <keep>false</keep>
-                        </configuration>
-                    </plugin>
+			<!-- Generate the stub from WSDLs/XSDs TODO -->
+			<!-- If your sources won't get picked up by Eclipse, check out this m2e connector: -->
+			<!-- http://stackoverflow.com/a/19225122/987940 --> 
+			<plugin>
+				<groupId>net.trajano.mojo</groupId>
+				<artifactId>jaxws-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>import-FooWS-wsdl</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>wsimport</goal>
+						</goals>
+						<configuration>
+							<wsdlFiles>
+								<wsdlFile>FooWSService.wsdl</wsdlFile>
+							</wsdlFiles>
+							<packageName>org.la.foows.ws.client</packageName>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<wsdlDirectory>${project.build.directory}/wsdl</wsdlDirectory>
+					<wsdlLocation>/wsdl/*</wsdlLocation>
+					<extension>true</extension>
+					<xuseBaseResourceAndURLToLoadWSDL>false</xuseBaseResourceAndURLToLoadWSDL>
+					<!-- @see http://stackoverflow.com/questions/23011547/webservice-client-generation-error-with-jdk8 -->
+					<vmArgs>
+						<vmArg>-Djavax.xml.accessExternalSchema=all</vmArg>
+					</vmArgs>
+				</configuration>
+			</plugin>
 
-                    <!-- Pack the WSDLs/XSDs in a JAR -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-jar-plugin</artifactId>
-                        <version>2.6</version>
-                        <executions>
-                            <execution>
-                                <id>attach-FooWS-wsdl-jar</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                                <configuration>
-                                    <finalName>FooWS</finalName>
-                                    <outputDirectory>${project.build.directory}/generated-sources/wsdl</outputDirectory>
-                                    <classesDirectory>${project.build.directory}/generated-sources/wsdl/FooWS</classesDirectory>
-                                </configuration>
-                            </execution>
-                        </executions>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
 
-                        <configuration>
-                            <includes>
-                                <include>**/*.wsdl</include>
-                                <include>**/*.xsd</include>
-                            </includes>
-                            <useDefaultManifestFile>true</useDefaultManifestFile>
-                        </configuration>
-                    </plugin>
+			<plugin>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.3</version>
+				<configuration>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+				</configuration>
+			</plugin>
+		</plugins>
 
-                    <!-- Deploy the JAR containg the WSDLs/XSDs -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                        <version>2.8.2</version>
-                        <executions>
-                            <execution>
-                                <id>deploy-FooWS-wsdl-jar</id>
-                                <phase>deploy</phase>
-                                <goals>
-                                    <goal>deploy-file</goal>
-                                </goals>
-                                <configuration>
-                                    <groupId>${project.groupId}.FooWS.wsdl</groupId>
-                                    <file>${project.build.directory}/generated-sources/wsdl/FooWS.jar</file>
-                                </configuration>
-                            </execution>
-                        </executions>
-                       
-                        <configuration>
-                            <packaging>jar</packaging>
-                            <generatePom>true</generatePom>
-                            <artifactId>${project.artifactId}</artifactId>
-                            <version>${project.version}</version>
-                            <!-- FIXME: use the default ones -->
-                            <repositoryId>lanexus</repositoryId>
-                            <url>http://localhost:8081/nexus/content/repositories/snapshots/</url>
-                    </configuration>
-                    </plugin>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>net.trajano.mojo</groupId>
+					<artifactId>jaxws-maven-plugin</artifactId>
+					<version>2.3.8</version>
+					<dependencies>
+						<dependency>
+							<groupId>org.glassfish.metro</groupId>
+							<artifactId>webservices-tools</artifactId>
+							<version>2.3</version>
+						</dependency>
+						<!-- see https://java.net/jira/browse/WSIT-1672 -->
+						<dependency>
+							<groupId>org.glassfish.metro</groupId>
+							<artifactId>webservices-rt</artifactId>
+							<version>2.3</version>
+						</dependency>
+					</dependencies>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 
-                </plugins>
-
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>net.trajano.mojo</groupId>
-                            <artifactId>jaxws-maven-plugin</artifactId>
-                            <version>2.3.8</version>
-                            <dependencies>
-                                <dependency>
-                                    <groupId>org.glassfish.metro</groupId>
-                                    <artifactId>webservices-tools</artifactId>
-                                    <version>2.3</version>
-                                </dependency>
-                                <!-- see https://java.net/jira/browse/WSIT-1672 -->
-                                <dependency>
-                                    <groupId>org.glassfish.metro</groupId>
-                                    <artifactId>webservices-rt</artifactId>
-                                    <version>2.3</version>
-                                </dependency>
-                            </dependencies>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-    </profiles>
+	</build>
 
 </project>
